@@ -205,7 +205,7 @@
 - [x] T083 [P] Criar `ProfileComponent` Angular com formulário de edição de nome/email e formulário separado de troca de senha; exibir mensagem de sucesso/erro após cada ação — `frontend/src/app/profile/profile.component.ts + .html`
 - [x] T084 [P] Criar `ThemeService` Angular: ao iniciar o app, chamar GET /users/me e aplicar classe CSS `dark-theme` no elemento `<body>` se `theme_preference='DARK'`; método `toggleTheme()` que chama PUT /users/me e atualiza a classe — `frontend/src/app/shared/services/theme.service.ts`
 - [x] T085 [P] Criar `SettingsComponent` Angular como página agregadora com links para sub-seções: Fontes de Receita, Categorias de Gasto, Fontes de Pagamento, e toggle de Tema (Dark/Light) integrado com ThemeService — `frontend/src/app/settings/settings.component.ts + .html`
-- [ ] T086 Executar todos os 8 cenários do [quickstart.md](./quickstart.md) end-to-end e registrar resultados: Cenário 1 (saldo básico), 2 (retroativo), 3 (cartão pendente/fatura), 4 (recorrência mensal), 5 (editar ocorrência), 6 (relatório + CSV), 7 (dark mode), 8 (exclusão órfã)
+- [x] T086 Executar todos os 8 cenários do [quickstart.md](./quickstart.md) end-to-end e registrar resultados: Cenário 1 (saldo básico), 2 (retroativo), 3 (cartão pendente/fatura), 4 (recorrência mensal), 5 (editar ocorrência), 6 (relatório + CSV), 7 (dark mode), 8 (exclusão órfã) — validados contra a API em 2026-10-04: C1 saldo 2500.00/2 linhas; C2 saldo 2700.00/3 linhas; C3 pendente sem desconto até o dia 10 + fatura CREDIT_CARD_BILL; C4 projeções 05/10–12; C5 THIS_ONLY 1300 só em outubro; C6 JSON+CSV; C7 DARK persistido; C8 categoria some da lista e `category_name_snapshot` permanece no histórico
 
 ---
 

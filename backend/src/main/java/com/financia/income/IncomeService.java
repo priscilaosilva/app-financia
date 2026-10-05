@@ -74,10 +74,6 @@ public class IncomeService {
                     }
             );
             if (scope == RecurrenceScope.THIS_ONLY) {
-                if (occurrenceDate.equals(entry.getDate())) {
-                    applyFields(userId, entry, request);
-                    return IncomeResponse.from(incomeEntryRepository.save(entry));
-                }
                 return IncomeResponse.from(entry);
             }
         } else {

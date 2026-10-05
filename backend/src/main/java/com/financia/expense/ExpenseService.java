@@ -78,10 +78,6 @@ public class ExpenseService {
                     }
             );
             if (scope == RecurrenceScope.THIS_ONLY) {
-                if (occurrenceDate.equals(entry.getDate())) {
-                    applyFields(userId, entry, request);
-                    return ExpenseResponse.from(expenseEntryRepository.save(entry));
-                }
                 return ExpenseResponse.from(entry);
             }
         } else {
