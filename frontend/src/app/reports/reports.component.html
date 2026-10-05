@@ -1,0 +1,50 @@
+<section class="page">
+  <h1>Relatórios</h1>
+  <div class="card" style="margin-bottom: 1rem;">
+    <div class="grid-2">
+      <label class="field">Filtro
+        <select [(ngModel)]="filter">
+          <option value="MONTH">Mês fechado</option>
+          <option value="YEAR">Ano fechado</option>
+          <option value="RANGE">Intervalo</option>
+        </select>
+      </label>
+      <label class="field" *ngIf="filter !== 'RANGE'">Ano
+        <input type="number" [(ngModel)]="year">
+      </label>
+      <label class="field" *ngIf="filter === 'MONTH'">Mês
+        <input type="number" min="1" max="12" [(ngModel)]="month">
+      </label>
+      <label class="field" *ngIf="filter === 'RANGE'">Início
+        <input type="date" [(ngModel)]="from">
+      </label>
+      <label class="field" *ngIf="filter === 'RANGE'">Fim
+        <input type="date" [(ngModel)]="to">
+      </label>
+    </div>
+    <button class="btn" (click)="generate()">Gerar relatório</button>
+    <button class="btn ghost" *ngIf="report" (click)="exportCsv()">Exportar CSV</button>
+  </div>
+
+  <div class="kpi-grid" *ngIf="report">
+    <div class="card"><p class="muted">Entradas</p><h2>{{ report.totals.income | number:'1.2-2' }}</h2></div>
+    <div class="card"><p class="muted">Saídas</p><h2>{{ report.totals.expenses_confirmed | number:'1.2-2' }}</h2></div>
+    <div class="card"><p class="muted">Cartão</p><h2>{{ report.totals.expenses_credit_card | number:'1.2-2' }}</h2></div>
+    <div class="card"><p class="muted">Economia</p><h2>{{ report.totals.savings | number:'1.2-2' }}</h2></div>
+  </div>
+
+  <div class="card" style="margin-top: 1rem;" *ngIf="report">
+    <canvas #chart></canvas>
+  </div>
+
+  <div class="card" style="margin-top: 1rem;" *ngIf="report">
+    <h3>Categorias</h3>
+    <table class="sheet">
+      <tr *ngFor="let item of report.category_breakdown">
+        <td>{{ item.category }}</td>
+        <td>{{ item.amount | number:'1.2-2' }}</td>
+        <td>{{ item.percentage }}%</td>
+      </tr>
+    </table>
+  </div>
+</section>

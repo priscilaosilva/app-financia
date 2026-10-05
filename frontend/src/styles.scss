@@ -1,0 +1,133 @@
+:root {
+  --bg: #f4efe6;
+  --surface: #fffdf8;
+  --ink: #1d2a24;
+  --muted: #5d6b64;
+  --line: #d8cfc0;
+  --accent: #1f6b4a;
+  --accent-soft: #d7efe4;
+  --danger: #9b3d3d;
+  --pending: #c9842a;
+  --pending-bg: #fff3d8;
+  --income: #1f6b4a;
+  --expense: #9b3d3d;
+  --shadow: 0 16px 40px rgba(40, 32, 20, 0.08);
+}
+
+body.dark-theme {
+  --bg: #121816;
+  --surface: #1b2320;
+  --ink: #f3efe6;
+  --muted: #b4c0b8;
+  --line: #2d3a35;
+  --accent: #7ad0a6;
+  --accent-soft: #214135;
+  --danger: #e08a8a;
+  --pending: #f0c36b;
+  --pending-bg: #3a2d16;
+  --income: #7ad0a6;
+  --expense: #e08a8a;
+  --shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "DM Sans", sans-serif;
+}
+
+h1, h2, h3 { font-family: "Fraunces", serif; margin: 0 0 0.5rem; }
+
+a { color: inherit; }
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+.page {
+  padding: 1.5rem 2rem 3rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 1.25rem;
+}
+
+.btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.7rem 1.1rem;
+  cursor: pointer;
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn.ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.btn.danger { background: var(--danger); }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+}
+
+.field input, .field select, .field textarea {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.muted { color: var(--muted); }
+.error { color: var(--danger); font-size: 0.9rem; }
+
+table.sheet {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table.sheet th, table.sheet td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.75rem 0.5rem;
+  text-align: left;
+}
+
+.pending-row { background: var(--pending-bg); }
+.projected { font-style: italic; opacity: 0.85; }
+
+.balance-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.2rem;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .kpi-grid, .grid-2 { grid-template-columns: 1fr; }
+}

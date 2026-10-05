@@ -1,0 +1,18 @@
+<div class="shell">
+  <aside>
+    <h2>Financia</h2>
+    <p class="muted">Gestão financeira pessoal</p>
+    <nav>
+      <a routerLink="/history" routerLinkActive="active">Histórico</a>
+      <a routerLink="/reports" routerLinkActive="active">Relatórios</a>
+      <a routerLink="/settings" routerLinkActive="active">Configurações</a>
+      <a routerLink="/profile" routerLinkActive="active">Perfil</a>
+    </nav>
+    <p style="margin-top: 2rem;">
+      <button class="btn ghost" (click)="auth.logout()">Sair</button>
+    </p>
+  </aside>
+  <main>
+    <router-outlet></router-outlet>
+  </main>
+</div>

@@ -1,0 +1,36 @@
+# Node / Angular
+node_modules/
+dist/
+.angular/
+coverage/
+*.log
+frontend/.env*
+
+# Java / Maven
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+.gradle/
+build/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+.mysql-local.cnf
+
+# Spec Kit local
+.specify/feature.json

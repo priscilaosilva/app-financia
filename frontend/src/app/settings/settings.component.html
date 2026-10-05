@@ -1,0 +1,59 @@
+<section class="page">
+  <h1>Configurações</h1>
+  <div class="card" style="margin-bottom: 1rem;">
+    <h3>Tema</h3>
+    <button class="btn ghost" (click)="theme.toggleTheme()">Alternar dark mode / modo claro</button>
+  </div>
+
+  <div class="card" style="margin-bottom: 1rem;">
+    <h3>Fontes de receita</h3>
+    <ul>
+      <li *ngFor="let source of sources">
+        {{ source.name }}
+        <button class="btn ghost" (click)="removeSource(source.id)">excluir</button>
+      </li>
+    </ul>
+    <div class="grid-2">
+      <input [(ngModel)]="sourceName" placeholder="Ex: Empresa X">
+      <button class="btn" (click)="addSource()">Adicionar</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom: 1rem;">
+    <h3>Categorias de gasto</h3>
+    <ul>
+      <li *ngFor="let category of categories">
+        {{ category.name }}
+        <button class="btn ghost" (click)="removeCategory(category.id)">excluir</button>
+      </li>
+    </ul>
+    <div class="grid-2">
+      <input [(ngModel)]="categoryName" placeholder="Ex: Lazer">
+      <button class="btn" (click)="addCategory()">Adicionar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Fontes de pagamento</h3>
+    <ul>
+      <li *ngFor="let method of methods">
+        {{ method.name }} ({{ method.type }})
+        <button class="btn ghost" (click)="removeMethod(method.id)">excluir</button>
+      </li>
+    </ul>
+    <label class="field">Nome <input [(ngModel)]="methodName"></label>
+    <label class="field">Tipo
+      <select [(ngModel)]="methodType">
+        <option value="CHECKING">Conta corrente</option>
+        <option value="SAVINGS">Reserva</option>
+        <option value="CREDIT_CARD">Cartão de crédito</option>
+      </select>
+    </label>
+    <div class="grid-2" *ngIf="methodType === 'CREDIT_CARD'">
+      <label class="field">Vencimento <input type="number" [(ngModel)]="dueDay"></label>
+      <label class="field">Início do período <input type="number" [(ngModel)]="billingStart"></label>
+      <label class="field">Fim do período <input type="number" [(ngModel)]="billingEnd"></label>
+    </div>
+    <button class="btn" (click)="addMethod()">Adicionar fonte</button>
+  </div>
+</section>

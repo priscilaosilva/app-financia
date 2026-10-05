@@ -1,0 +1,20 @@
+<section class="page">
+  <h1>Perfil</h1>
+  <p class="muted" *ngIf="message">{{ message }}</p>
+  <div class="card" style="margin-bottom: 1rem;">
+    <form [formGroup]="profile" (ngSubmit)="saveProfile()">
+      <label class="field">Nome <input formControlName="name"></label>
+      <label class="field">Email <input formControlName="email"></label>
+      <button class="btn" type="submit" [disabled]="profile.invalid">Salvar perfil</button>
+    </form>
+  </div>
+  <div class="card" style="margin-bottom: 1rem;">
+    <h3>Trocar senha</h3>
+    <form [formGroup]="password" (ngSubmit)="changePassword()">
+      <label class="field">Senha atual <input type="password" formControlName="current_password"></label>
+      <label class="field">Nova senha <input type="password" formControlName="new_password"></label>
+      <button class="btn" type="submit" [disabled]="password.invalid">Atualizar senha</button>
+    </form>
+  </div>
+  <button class="btn danger" (click)="deleteAccount()">Excluir conta</button>
+</section>

@@ -1,0 +1,71 @@
+<section class="page">
+  <div class="balance-hero">
+    <div>
+      <p class="muted">Saldo total</p>
+      <h1>{{ balance | number:'1.2-2' }}</h1>
+    </div>
+    <div>
+      <button class="btn ghost" (click)="previous()">←</button>
+      <strong style="margin: 0 1rem;">{{ monthLabel() }}</strong>
+      <button class="btn ghost" (click)="next()">→</button>
+    </div>
+  </div>
+
+  <div style="display:flex; gap: .7rem; margin-bottom: 1rem;">
+    <button class="btn" (click)="showIncome = !showIncome">Nova entrada</button>
+    <button class="btn ghost" (click)="showExpense = !showExpense">Nova saída</button>
+  </div>
+
+  <div class="card" *ngIf="showIncome" style="margin-bottom: 1rem;">
+    <h3>Registrar entrada</h3>
+    <app-income-form (saved)="showIncome = false; reload()"></app-income-form>
+  </div>
+  <div class="card" *ngIf="showExpense" style="margin-bottom: 1rem;">
+    <h3>Registrar saída</h3>
+    <app-expense-form (saved)="showExpense = false; reload()"></app-expense-form>
+  </div>
+
+  <div class="card">
+    <table class="sheet">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Entrada</th>
+          <th>Saída</th>
+          <th>Saldo</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of history?.rows" [class.pending-row]="row.daily_expense_pending > 0">
+          <td>
+            {{ row.date }}
+            <div class="muted" *ngFor="let entry of row.entries">
+              <span [class.projected]="entry.is_recurring_projection">
+                {{ entry.label }}
+                <span *ngIf="entry.status === 'PENDING_CREDIT'"> · pendente — cartão</span>
+                <span *ngIf="entry.is_recurring_projection"> ↻</span>
+              </span>
+            </div>
+          </td>
+          <td>{{ row.daily_income | number:'1.2-2' }}</td>
+          <td>{{ (row.daily_expense_confirmed + row.daily_expense_pending) | number:'1.2-2' }}</td>
+          <td>{{ row.running_balance | number:'1.2-2' }}</td>
+          <td>
+            <button class="btn ghost" *ngFor="let entry of row.entries"
+                    (click)="askDelete(entry.id, entry.type, entry.is_recurring_projection)">
+              excluir
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="muted" *ngIf="!history?.rows?.length">Nenhum lançamento neste período.</p>
+  </div>
+</section>
+
+<app-recurrence-scope-dialog
+  [open]="dialogOpen"
+  (selected)="onScope($event)"
+  (close)="dialogOpen = false">
+</app-recurrence-scope-dialog>

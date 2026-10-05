@@ -1,0 +1,29 @@
+<section class="page" style="max-width: 460px; margin: 8vh auto;">
+  <div class="card">
+    <h1>Financia</h1>
+    <p class="muted">{{ mode === 'login' ? 'Entre para ver seu saldo e histórico.' : 'Crie sua conta para começar.' }}</p>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label class="field" *ngIf="mode === 'register'">
+        Nome
+        <input formControlName="name" placeholder="Seu nome">
+      </label>
+      <label class="field">
+        Email
+        <input formControlName="email" type="email" placeholder="voce@email.com">
+      </label>
+      <label class="field">
+        Senha
+        <input formControlName="password" type="password" placeholder="Mínimo 6 caracteres">
+      </label>
+      <p class="error" *ngIf="error">{{ error }}</p>
+      <button class="btn" type="submit" [disabled]="form.invalid">
+        {{ mode === 'login' ? 'Entrar' : 'Criar conta' }}
+      </button>
+    </form>
+    <p style="margin-top: 1rem;">
+      <button class="btn ghost" type="button" (click)="mode = mode === 'login' ? 'register' : 'login'">
+        {{ mode === 'login' ? 'Ainda não tenho conta' : 'Já tenho conta' }}
+      </button>
+    </p>
+  </div>
+</section>

@@ -1,0 +1,30 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <div class="grid-2">
+    <label class="field">Data
+      <input type="date" formControlName="date">
+    </label>
+    <label class="field">Valor
+      <input type="number" step="0.01" formControlName="amount">
+    </label>
+  </div>
+  <label class="field">Fonte
+    <select formControlName="income_source_id">
+      <option [ngValue]="null">Sem fonte</option>
+      <option *ngFor="let source of sources" [ngValue]="source.id">{{ source.name }}</option>
+    </select>
+  </label>
+  <label class="field">Descrição
+    <textarea formControlName="description"></textarea>
+  </label>
+  <label class="field">
+    <input type="checkbox" formControlName="repeat"> Repetir?
+  </label>
+  <label class="field" *ngIf="form.value.repeat">Frequência
+    <select formControlName="frequency">
+      <option value="DAILY">Diária</option>
+      <option value="MONTHLY">Mensal</option>
+      <option value="YEARLY">Anual</option>
+    </select>
+  </label>
+  <button class="btn" type="submit" [disabled]="form.invalid">Salvar entrada</button>
+</form>
