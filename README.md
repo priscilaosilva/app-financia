@@ -13,7 +13,11 @@ Sistema de gestão financeira pessoal: Angular 17 + Spring Boot 3 + MySQL 8.
 
 ```bash
 cd backend
-# variáveis opcionais: DB_URL, DB_USER, DB_PASSWORD, JWT_SECRET
+netstat -ano | findstr :8080
+taskkill /PID 21544 /F
+cd /d/repos/Financia/app-financia/backend
+export DB_USER=root
+export DB_PASSWORD='<password>>'
 mvn spring-boot:run
 ```
 

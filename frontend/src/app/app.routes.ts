@@ -1,8 +1,12 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './auth/auth.guard';
+import { authGuard, guestGuard, unknownRouteGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
-  { path: 'login', loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent) },
+  {
+    path: 'login',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent)
+  },
   {
     path: '',
     loadComponent: () => import('./layout/app-layout.component').then(m => m.AppLayoutComponent),
@@ -15,5 +19,9 @@ export const routes: Routes = [
       { path: 'profile', loadComponent: () => import('./profile/profile.component').then(m => m.ProfileComponent) }
     ]
   },
-  { path: '**', redirectTo: 'history' }
+  {
+    path: '**',
+    canActivate: [unknownRouteGuard],
+    loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent)
+  }
 ];

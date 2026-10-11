@@ -11,19 +11,45 @@ import { AuthService } from '../auth.service';
   templateUrl: './login.component.html'
 })
 export class LoginComponent {
-  mode: 'login' | 'register' = 'login';
+  mode: 'login' | 'register' | 'forgot' = 'login';
   error = '';
+  info = '';
   form = this.fb.group({
     name: [''],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]]
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    passwordConfirmation: ['']
   });
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {}
 
+  setMode(mode: 'login' | 'register' | 'forgot'): void {
+    this.mode = mode;
+    this.error = '';
+    this.info = '';
+    this.form.controls.passwordConfirmation.setValue('');
+    this.form.controls.password.setValidators([Validators.required, Validators.minLength(6)]);
+    this.form.controls.password.updateValueAndValidity();
+  }
+
   submit(): void {
     this.error = '';
-    const { name, email, password } = this.form.getRawValue();
+    this.info = '';
+    const { name, email, password, passwordConfirmation } = this.form.getRawValue();
+    if (this.mode === 'forgot') {
+      if ((password || '') !== (passwordConfirmation || '')) {
+        this.error = 'A confirmação deve ser igual à senha nova.';
+        return;
+      }
+      this.auth.forgotPassword(email || '', password || '', passwordConfirmation || '').subscribe({
+        next: () => {
+          this.setMode('login');
+          this.info = 'Se houver conta com este e-mail, a senha foi atualizada. Entre com a senha nova.';
+        },
+        error: (err) => this.error = err?.error?.error || 'Não foi possível atualizar a senha.'
+      });
+      return;
+    }
     if (this.mode === 'register') {
       this.auth.register(name || '', email || '', password || '').subscribe({
         next: () => this.auth.login(email || '', password || '').subscribe({

@@ -32,6 +32,12 @@ Registra novo usuário.
 
 ---
 
+### `POST /auth/forgot-password`
+
+Ver `specs/003-session-password-reset/contracts/api-contract.md` (redefinição sem sessão; 204 genérico; incrementa `token_version`).
+
+---
+
 ### `POST /auth/login`
 Autentica e retorna JWT.
 
