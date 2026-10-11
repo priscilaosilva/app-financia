@@ -88,15 +88,24 @@ public class ExpenseService {
 
     @Transactional
     public void delete(Long userId, Long id, RecurrenceScope scope) {
+        delete(userId, id, scope, null);
+    }
+
+    @Transactional
+    public void delete(Long userId, Long id, RecurrenceScope scope, LocalDate occurrenceDate) {
         ExpenseEntry entry = getOwned(userId, id);
+        LocalDate occ = occurrenceDate != null ? occurrenceDate : entry.getDate();
         if (entry.getRecurrenceRule() != null) {
             RecurrenceRule rule = entry.getRecurrenceRule();
-            recurrenceEditService.handleDelete(rule, entry.getDate(), scope, () -> {
+            recurrenceEditService.handleDelete(rule, occ, scope, () -> {
                 expenseEntryRepository.findByUserIdAndRecurrenceRuleIdAndBaseRecurrenceTrue(userId, rule.getId())
                         .ifPresent(expenseEntryRepository::delete);
                 recurrenceRuleRepository.delete(rule);
             });
             return;
+        }
+        if (occurrenceDate != null && !occurrenceDate.equals(entry.getDate())) {
+            throw new BusinessException("Lançamento não ocorre nesta data", "date");
         }
         expenseEntryRepository.delete(entry);
     }

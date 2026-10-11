@@ -19,5 +19,7 @@ public class HistoryEntryDto {
     private final String categoryNameSnapshot;
     @JsonProperty("is_recurring_projection")
     private final boolean isRecurringProjection;
+    @JsonProperty("is_recurring")
+    private final boolean isRecurring;
     private final LocalDate date;
 }

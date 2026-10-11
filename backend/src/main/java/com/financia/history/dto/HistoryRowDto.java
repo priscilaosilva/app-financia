@@ -1,5 +1,6 @@
 package com.financia.history.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -16,4 +17,6 @@ public class HistoryRowDto {
     private final BigDecimal dailyExpenseConfirmed;
     private final BigDecimal dailyExpensePending;
     private final BigDecimal runningBalance;
+    @JsonProperty("has_movement")
+    private final boolean hasMovement;
 }

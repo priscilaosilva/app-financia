@@ -114,6 +114,9 @@ table.sheet th, table.sheet td {
 
 .pending-row { background: var(--pending-bg); }
 .projected { font-style: italic; opacity: 0.85; }
+.empty-day { opacity: 0.55; }
+.empty-day td:nth-child(2),
+.empty-day td:nth-child(3) { color: var(--muted); }
 
 .balance-hero {
   display: flex;

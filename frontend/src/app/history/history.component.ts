@@ -1,41 +1,60 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { HistoryResponse, HistoryService } from './history.service';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { HistoryEntry, HistoryResponse, HistoryRow, HistoryService } from './history.service';
 import { IncomeFormComponent } from '../income/income-form/income-form.component';
 import { ExpenseFormComponent } from '../expense/expense-form/expense-form.component';
 import { RecurrenceScopeDialogComponent } from '../shared/components/recurrence-scope-dialog/recurrence-scope-dialog.component';
-import { IncomeService } from '../income/income.service';
-import { ExpenseService } from '../expense/expense.service';
+import { DayEntriesDialogComponent } from './day-entries-dialog.component';
+import { ConfirmDeleteDialogComponent } from './confirm-delete-dialog.component';
 
 @Component({
   selector: 'app-history',
   standalone: true,
-  imports: [CommonModule, IncomeFormComponent, ExpenseFormComponent, RecurrenceScopeDialogComponent],
+  imports: [
+    CommonModule,
+    IncomeFormComponent,
+    ExpenseFormComponent,
+    RecurrenceScopeDialogComponent,
+    DayEntriesDialogComponent,
+    ConfirmDeleteDialogComponent
+  ],
   templateUrl: './history.component.html'
 })
 export class HistoryComponent implements OnInit {
+  @ViewChild(DayEntriesDialogComponent) dayDialog?: DayEntriesDialogComponent;
+
   month = new Date();
   history?: HistoryResponse;
   balance = 0;
   showIncome = false;
   showExpense = false;
-  dialogOpen = false;
-  pendingDelete?: { id: number; type: 'INCOME' | 'EXPENSE' };
+  listOpen = false;
+  confirmOpen = false;
+  scopeOpen = false;
+  activeDate = '';
+  dayEntries: HistoryEntry[] = [];
+  pendingItems: HistoryEntry[] = [];
 
-  constructor(
-    private historyApi: HistoryService,
-    private income: IncomeService,
-    private expense: ExpenseService
-  ) {}
+  constructor(private historyApi: HistoryService) {}
 
   ngOnInit(): void {
     this.reload();
   }
 
-  reload(): void {
+  reload(keepList = false): void {
     const from = this.firstDay();
     const to = this.lastDay();
-    this.historyApi.getHistory(from, to).subscribe((data) => this.history = data);
+    this.historyApi.getHistory(from, to).subscribe((data) => {
+      this.history = data;
+      if (keepList && this.listOpen) {
+        const row = data.rows.find((item) => item.date === this.activeDate);
+        this.dayEntries = this.deletable(row);
+        this.dayDialog?.resetSelection(this.dayEntries);
+        if (!this.dayEntries.length) {
+          this.listOpen = false;
+        }
+      }
+    });
     this.historyApi.getBalance().subscribe((data) => this.balance = data.balance);
   }
 
@@ -49,40 +68,90 @@ export class HistoryComponent implements OnInit {
     this.reload();
   }
 
-  askDelete(id: number | null, type: string, projected: boolean): void {
-    if (!id) {
+  isEmpty(row: HistoryRow): boolean {
+    return row.has_movement === false || !row.entries?.length;
+  }
+
+  hasDeletable(row: HistoryRow): boolean {
+    return this.deletable(row).length > 0;
+  }
+
+  openManage(row: HistoryRow): void {
+    this.activeDate = row.date;
+    this.dayEntries = this.deletable(row);
+    if (!this.dayEntries.length) {
       return;
     }
-    this.pendingDelete = { id, type: type === 'INCOME' ? 'INCOME' : 'EXPENSE' };
-    if (projected) {
-      this.dialogOpen = true;
+    this.listOpen = true;
+  }
+
+  onDeleteRequested(items: HistoryEntry[]): void {
+    this.pendingItems = items;
+    this.confirmOpen = true;
+  }
+
+  onConfirmCancel(): void {
+    this.confirmOpen = false;
+    this.pendingItems = [];
+  }
+
+  onConfirmDelete(): void {
+    this.confirmOpen = false;
+    const needsScope = this.pendingItems.some((item) => item.is_recurring_projection || item.is_recurring);
+    if (needsScope) {
+      this.scopeOpen = true;
       return;
     }
-    this.confirmDelete();
+    this.submitDelete();
   }
 
   onScope(scope: string): void {
-    this.dialogOpen = false;
-    this.confirmDelete(scope);
+    this.scopeOpen = false;
+    this.submitDelete(scope);
   }
 
-  private confirmDelete(scope?: string): void {
-    if (!this.pendingDelete) {
-      return;
-    }
-    const action = this.pendingDelete.type === 'INCOME'
-      ? this.income.deleteIncome(this.pendingDelete.id, scope)
-      : this.expense.deleteExpense(this.pendingDelete.id, scope);
-    action.subscribe(() => this.reload());
-    this.pendingDelete = undefined;
+  onScopeClose(): void {
+    this.scopeOpen = false;
+    this.pendingItems = [];
+  }
+
+  closeList(): void {
+    this.listOpen = false;
+    this.pendingItems = [];
+  }
+
+  private submitDelete(scope?: string): void {
+    const items = this.pendingItems
+      .filter((item) => item.id != null)
+      .map((item) => ({ id: item.id as number, type: item.type }));
+    this.historyApi.deleteDayEntries(this.activeDate, items, scope).subscribe({
+      next: () => {
+        this.pendingItems = [];
+        this.reload(true);
+      },
+      error: () => {
+        this.pendingItems = [];
+      }
+    });
+  }
+
+  private deletable(row?: HistoryRow): HistoryEntry[] {
+    return (row?.entries ?? []).filter((entry) =>
+      entry.id != null && (entry.type === 'INCOME' || entry.type === 'EXPENSE')
+    );
   }
 
   private firstDay(): string {
-    return new Date(this.month.getFullYear(), this.month.getMonth(), 1).toISOString().slice(0, 10);
+    const year = this.month.getFullYear();
+    const month = this.month.getMonth();
+    return `${year}-${String(month + 1).padStart(2, '0')}-01`;
   }
 
   private lastDay(): string {
-    return new Date(this.month.getFullYear(), this.month.getMonth() + 1, 0).toISOString().slice(0, 10);
+    const year = this.month.getFullYear();
+    const month = this.month.getMonth();
+    const last = new Date(year, month + 1, 0).getDate();
+    return `${year}-${String(month + 1).padStart(2, '0')}-${String(last).padStart(2, '0')}`;
   }
 
   monthLabel(): string {

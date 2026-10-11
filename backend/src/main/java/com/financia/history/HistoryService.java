@@ -71,11 +71,12 @@ public class HistoryService {
 
         BigDecimal running = openingBalance(userId, from.minusDays(1));
         List<HistoryRowDto> rows = new ArrayList<>();
-        for (Map.Entry<LocalDate, List<HistoryEntryDto>> entry : byDate.entrySet()) {
+        for (LocalDate day = from; !day.isAfter(to); day = day.plusDays(1)) {
+            List<HistoryEntryDto> items = byDate.getOrDefault(day, List.of());
             BigDecimal dailyIncome = BigDecimal.ZERO;
             BigDecimal dailyConfirmed = BigDecimal.ZERO;
             BigDecimal dailyPending = BigDecimal.ZERO;
-            for (HistoryEntryDto item : entry.getValue()) {
+            for (HistoryEntryDto item : items) {
                 if ("INCOME".equals(item.getType())) {
                     dailyIncome = dailyIncome.add(item.getAmount());
                     running = running.add(item.getAmount());
@@ -87,12 +88,13 @@ public class HistoryService {
                 }
             }
             rows.add(HistoryRowDto.builder()
-                    .date(entry.getKey())
-                    .entries(entry.getValue())
+                    .date(day)
+                    .entries(items)
                     .dailyIncome(dailyIncome)
                     .dailyExpenseConfirmed(dailyConfirmed)
                     .dailyExpensePending(dailyPending)
                     .runningBalance(running)
+                    .hasMovement(!items.isEmpty())
                     .build());
         }
         return new HistoryResponse(from, to, rows);
@@ -113,6 +115,7 @@ public class HistoryService {
                     .label(label(description, entry.getSourceNameSnapshot()))
                     .status("CONFIRMED")
                     .isRecurringProjection(false)
+                    .isRecurring(entry.getRecurrenceRule() != null)
                     .date(entry.getDate())
                     .build());
         }
@@ -135,6 +138,7 @@ public class HistoryService {
                     .paymentMethod(entry.getPaymentMethodNameSnapshot())
                     .categoryNameSnapshot(entry.getCategoryNameSnapshot())
                     .isRecurringProjection(false)
+                    .isRecurring(entry.getRecurrenceRule() != null)
                     .date(entry.getDate())
                     .build());
         }
@@ -158,6 +162,7 @@ public class HistoryService {
                         .label(label(occurrence.getDescription(), base.getSourceNameSnapshot()))
                         .status("CONFIRMED")
                         .isRecurringProjection(true)
+                        .isRecurring(true)
                         .date(occurrence.getDate())
                         .build());
             }
@@ -184,6 +189,7 @@ public class HistoryService {
                         .paymentMethod(base.getPaymentMethodNameSnapshot())
                         .categoryNameSnapshot(base.getCategoryNameSnapshot())
                         .isRecurringProjection(true)
+                        .isRecurring(true)
                         .date(occurrence.getDate())
                         .build());
             }
@@ -206,6 +212,7 @@ public class HistoryService {
                         .status("CONFIRMED")
                         .paymentMethod(card.getName())
                         .isRecurringProjection(false)
+                        .isRecurring(false)
                         .date(due)
                         .build());
             }

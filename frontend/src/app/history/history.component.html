@@ -25,7 +25,7 @@
     <app-expense-form (saved)="showExpense = false; reload()"></app-expense-form>
   </div>
 
-  <div class="card">
+  <div class="card" *ngIf="history">
     <table class="sheet">
       <thead>
         <tr>
@@ -37,7 +37,9 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let row of history?.rows" [class.pending-row]="row.daily_expense_pending > 0">
+        <tr *ngFor="let row of history.rows"
+            [class.pending-row]="row.daily_expense_pending > 0"
+            [class.empty-day]="isEmpty(row)">
           <td>
             {{ row.date }}
             <div class="muted" *ngFor="let entry of row.entries">
@@ -48,24 +50,38 @@
               </span>
             </div>
           </td>
-          <td>{{ row.daily_income | number:'1.2-2' }}</td>
-          <td>{{ (row.daily_expense_confirmed + row.daily_expense_pending) | number:'1.2-2' }}</td>
+          <td>
+            <ng-container *ngIf="!isEmpty(row)">{{ row.daily_income | number:'1.2-2' }}</ng-container>
+          </td>
+          <td>
+            <ng-container *ngIf="!isEmpty(row)">{{ (row.daily_expense_confirmed + row.daily_expense_pending) | number:'1.2-2' }}</ng-container>
+          </td>
           <td>{{ row.running_balance | number:'1.2-2' }}</td>
           <td>
-            <button class="btn ghost" *ngFor="let entry of row.entries"
-                    (click)="askDelete(entry.id, entry.type, entry.is_recurring_projection)">
-              excluir
-            </button>
+            <button class="btn ghost" *ngIf="hasDeletable(row)" (click)="openManage(row)">Gerenciar</button>
           </td>
         </tr>
       </tbody>
     </table>
-    <p class="muted" *ngIf="!history?.rows?.length">Nenhum lançamento neste período.</p>
   </div>
 </section>
 
+<app-day-entries-dialog
+  [open]="listOpen"
+  [date]="activeDate"
+  [entries]="dayEntries"
+  (close)="closeList()"
+  (deleteRequested)="onDeleteRequested($event)">
+</app-day-entries-dialog>
+
+<app-confirm-delete-dialog
+  [open]="confirmOpen"
+  (confirm)="onConfirmDelete()"
+  (cancel)="onConfirmCancel()">
+</app-confirm-delete-dialog>
+
 <app-recurrence-scope-dialog
-  [open]="dialogOpen"
+  [open]="scopeOpen"
   (selected)="onScope($event)"
-  (close)="dialogOpen = false">
+  (close)="onScopeClose()">
 </app-recurrence-scope-dialog>

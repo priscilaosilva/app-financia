@@ -167,7 +167,7 @@ Retorna o histórico em formato de planilha por data.
 > - `running_balance`: saldo acumulado até e incluindo essa data, considerando apenas `CONFIRMED`.  
 > - `is_recurring_projection: true`: ocorrência futura gerada a partir de regra de recorrência.  
 > - `id: null`: linha sintética de fatura de cartão (não é um registro persistido).  
-> - Dias sem lançamentos são omitidos do array `rows`.
+> - Dias sem lançamentos **aparecem** no array `rows` (uma linha por dia civil do intervalo). Ver `specs/002-history-every-day/contracts/api-contract.md`.
 
 ---
 
