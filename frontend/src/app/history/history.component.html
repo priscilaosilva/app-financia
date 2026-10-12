@@ -12,17 +12,8 @@
   </div>
 
   <div style="display:flex; gap: .7rem; margin-bottom: 1rem;">
-    <button class="btn" (click)="showIncome = !showIncome">Nova entrada</button>
-    <button class="btn ghost" (click)="showExpense = !showExpense">Nova saída</button>
-  </div>
-
-  <div class="card" *ngIf="showIncome" style="margin-bottom: 1rem;">
-    <h3>Registrar entrada</h3>
-    <app-income-form (saved)="showIncome = false; reload()"></app-income-form>
-  </div>
-  <div class="card" *ngIf="showExpense" style="margin-bottom: 1rem;">
-    <h3>Registrar saída</h3>
-    <app-expense-form (saved)="showExpense = false; reload()"></app-expense-form>
+    <button class="btn" type="button" (click)="openEntryFromTop('income')">Nova entrada</button>
+    <button class="btn ghost" type="button" (click)="openEntryFromTop('expense')">Nova saída</button>
   </div>
 
   <div class="card" *ngIf="history">
@@ -58,13 +49,36 @@
           </td>
           <td>{{ row.running_balance | number:'1.2-2' }}</td>
           <td>
-            <button class="btn ghost" *ngIf="hasDeletable(row)" (click)="openManage(row)">Gerenciar</button>
+            <div class="row-actions">
+              <button class="btn ghost" type="button" title="Nova entrada" (click)="openEntryFromRow('income', row)">Entrada</button>
+              <button class="btn ghost" type="button" title="Nova saída" (click)="openEntryFromRow('expense', row)">Saída</button>
+              <button class="btn ghost" type="button" *ngIf="hasDeletable(row)" (click)="openManage(row)">Gerenciar</button>
+            </div>
           </td>
         </tr>
       </tbody>
     </table>
   </div>
 </section>
+
+<div class="entry-overlay" *ngIf="entryModal">
+  <div class="card" (click)="$event.stopPropagation()">
+    <h3>{{ entryModal === 'income' ? 'Registrar entrada' : 'Registrar saída' }}</h3>
+    <app-income-form
+      *ngIf="entryModal === 'income'"
+      [initialDate]="entryInitialDate"
+      (saved)="onEntrySaved($event)">
+    </app-income-form>
+    <app-expense-form
+      *ngIf="entryModal === 'expense'"
+      [initialDate]="entryInitialDate"
+      (saved)="onEntrySaved($event)">
+    </app-expense-form>
+    <div style="margin-top: 1rem;">
+      <button class="btn ghost" type="button" (click)="closeEntryModal()">Fechar</button>
+    </div>
+  </div>
+</div>
 
 <app-day-entries-dialog
   [open]="listOpen"

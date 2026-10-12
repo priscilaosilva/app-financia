@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ExpenseService } from '../expense.service';
 
@@ -10,7 +10,8 @@ import { ExpenseService } from '../expense.service';
   templateUrl: './expense-form.component.html'
 })
 export class ExpenseFormComponent implements OnInit {
-  @Output() saved = new EventEmitter<void>();
+  @Input() initialDate = '';
+  @Output() saved = new EventEmitter<string>();
   categories: Array<{ id: number; name: string }> = [];
   methods: Array<{ id: number; name: string; type: string }> = [];
   form = this.fb.group({
@@ -26,6 +27,7 @@ export class ExpenseFormComponent implements OnInit {
   constructor(private fb: FormBuilder, private expense: ExpenseService) {}
 
   ngOnInit(): void {
+    this.form.patchValue({ date: this.initialDate || '' });
     this.expense.getCategories().subscribe((items) => this.categories = items);
     this.expense.getPaymentMethods().subscribe((items) => this.methods = items);
   }
@@ -50,9 +52,9 @@ export class ExpenseFormComponent implements OnInit {
     if (value.repeat) {
       payload['recurrence'] = { frequency: value.frequency, start_date: value.date };
     }
-    this.expense.createExpense(payload).subscribe(() => {
-      this.form.reset({ date: value.date, repeat: false, frequency: 'MONTHLY' });
-      this.saved.emit();
+    this.expense.createExpense(payload).subscribe({
+      next: () => this.saved.emit(String(value.date ?? '')),
+      error: () => undefined
     });
   }
 }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { HistoryEntry, HistoryResponse, HistoryRow, HistoryService } from './history.service';
 import { IncomeFormComponent } from '../income/income-form/income-form.component';
 import { ExpenseFormComponent } from '../expense/expense-form/expense-form.component';
@@ -18,7 +18,32 @@ import { ConfirmDeleteDialogComponent } from './confirm-delete-dialog.component'
     DayEntriesDialogComponent,
     ConfirmDeleteDialogComponent
   ],
-  templateUrl: './history.component.html'
+  templateUrl: './history.component.html',
+  styles: [`
+    .entry-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .35);
+      padding: 1rem;
+      z-index: 30;
+    }
+    .entry-overlay .card {
+      max-width: 520px;
+      margin: 8vh auto;
+      max-height: 84vh;
+      overflow: auto;
+    }
+    .row-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      justify-content: flex-end;
+    }
+    .row-actions .btn {
+      padding: 0.2rem 0.45rem;
+      font-size: 0.8rem;
+    }
+  `]
 })
 export class HistoryComponent implements OnInit {
   @ViewChild(DayEntriesDialogComponent) dayDialog?: DayEntriesDialogComponent;
@@ -26,8 +51,8 @@ export class HistoryComponent implements OnInit {
   month = new Date();
   history?: HistoryResponse;
   balance = 0;
-  showIncome = false;
-  showExpense = false;
+  entryModal: 'income' | 'expense' | null = null;
+  entryInitialDate = '';
   listOpen = false;
   confirmOpen = false;
   scopeOpen = false;
@@ -38,6 +63,32 @@ export class HistoryComponent implements OnInit {
   constructor(private historyApi: HistoryService) {}
 
   ngOnInit(): void {
+    this.reload();
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onDocumentKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.entryModal) {
+      this.closeEntryModal();
+    }
+  }
+
+  openEntryFromTop(kind: 'income' | 'expense'): void {
+    this.openEntry(kind, '');
+  }
+
+  openEntryFromRow(kind: 'income' | 'expense', row: HistoryRow): void {
+    this.openEntry(kind, row.date);
+  }
+
+  closeEntryModal(): void {
+    this.entryModal = null;
+    this.entryInitialDate = '';
+  }
+
+  onEntrySaved(date: string): void {
+    this.closeEntryModal();
+    this.goToMonthOf(date);
     this.reload();
   }
 
@@ -118,6 +169,21 @@ export class HistoryComponent implements OnInit {
   closeList(): void {
     this.listOpen = false;
     this.pendingItems = [];
+  }
+
+  private openEntry(kind: 'income' | 'expense', date: string): void {
+    this.entryModal = kind;
+    this.entryInitialDate = date;
+  }
+
+  private goToMonthOf(date: string): void {
+    const parts = date.split('-').map(Number);
+    const year = parts[0];
+    const month = parts[1];
+    if (!year || !month) {
+      return;
+    }
+    this.month = new Date(year, month - 1, 1);
   }
 
   private submitDelete(scope?: string): void {

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IncomeService } from '../income.service';
 
@@ -10,7 +10,8 @@ import { IncomeService } from '../income.service';
   templateUrl: './income-form.component.html'
 })
 export class IncomeFormComponent implements OnInit {
-  @Output() saved = new EventEmitter<void>();
+  @Input() initialDate = '';
+  @Output() saved = new EventEmitter<string>();
   sources: Array<{ id: number; name: string }> = [];
   form = this.fb.group({
     date: ['', Validators.required],
@@ -24,6 +25,7 @@ export class IncomeFormComponent implements OnInit {
   constructor(private fb: FormBuilder, private income: IncomeService) {}
 
   ngOnInit(): void {
+    this.form.patchValue({ date: this.initialDate || '' });
     this.income.getIncomeSources().subscribe((sources) => this.sources = sources);
   }
 
@@ -41,9 +43,9 @@ export class IncomeFormComponent implements OnInit {
     if (value.repeat) {
       payload['recurrence'] = { frequency: value.frequency, start_date: value.date };
     }
-    this.income.createIncome(payload).subscribe(() => {
-      this.form.reset({ date: value.date, repeat: false, frequency: 'MONTHLY' });
-      this.saved.emit();
+    this.income.createIncome(payload).subscribe({
+      next: () => this.saved.emit(String(value.date ?? '')),
+      error: () => undefined
     });
   }
 }
