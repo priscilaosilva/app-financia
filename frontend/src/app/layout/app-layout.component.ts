@@ -15,6 +15,12 @@ import { ThemeService } from '../shared/services/theme.service';
     nav { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 1.5rem; }
     a { text-decoration: none; padding: 0.7rem 0.9rem; border-radius: 12px; }
     a.active { background: var(--accent-soft); color: var(--accent); }
+    @media (max-width: 480px) {
+      .shell { grid-template-columns: 1fr; }
+      aside { border-right: 0; border-bottom: 1px solid var(--line); padding: 0.8rem 1rem; }
+      nav { flex-direction: row; flex-wrap: wrap; margin-top: 0.5rem; }
+      aside .btn { margin-top: 0.4rem; }
+    }
   `]
 })
 export class AppLayoutComponent implements OnInit {

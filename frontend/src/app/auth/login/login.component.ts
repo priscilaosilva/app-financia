@@ -14,6 +14,7 @@ export class LoginComponent {
   mode: 'login' | 'register' | 'forgot' = 'login';
   error = '';
   info = '';
+  attempted = false;
   form = this.fb.group({
     name: [''],
     email: ['', [Validators.required, Validators.email]],
@@ -33,8 +34,19 @@ export class LoginComponent {
   }
 
   submit(): void {
+    this.attempted = true;
     this.error = '';
     this.info = '';
+    const emailControl = this.form.controls.email;
+    const trimmed = (emailControl.value || '').trim();
+    emailControl.setValue(trimmed, { emitEvent: false });
+    if (emailControl.invalid) {
+      this.error = 'Informe um e-mail no formato nome@dominio.';
+      return;
+    }
+    if (this.form.invalid) {
+      return;
+    }
     const { name, email, password, passwordConfirmation } = this.form.getRawValue();
     if (this.mode === 'forgot') {
       if ((password || '') !== (passwordConfirmation || '')) {

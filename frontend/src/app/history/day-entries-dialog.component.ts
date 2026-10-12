@@ -16,15 +16,17 @@ import { HistoryEntry } from './history.service';
           <span>{{ entry.type === 'INCOME' ? 'Entrada' : 'Saída' }} · {{ entry.label }} · {{ entry.amount | number:'1.2-2' }}</span>
         </label>
         <p class="error" *ngIf="error">{{ error }}</p>
-        <div style="display:flex; gap: 0.6rem; margin-top: 1rem;">
-          <button class="btn danger" (click)="askDelete()">Apagar</button>
-          <button class="btn ghost" (click)="close.emit()">Fechar</button>
+        <div style="display:flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem;">
+          <button class="btn" type="button" *ngIf="selectedCount === 1" (click)="askEdit()">Editar</button>
+          <button class="btn danger" type="button" (click)="askDelete()">Apagar</button>
+          <button class="btn ghost" type="button" (click)="close.emit()">Fechar</button>
         </div>
       </div>
     </div>
   `,
   styles: [`
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); padding: 1rem; z-index: 20; }
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); padding: 1rem; z-index: 20; overflow: auto; }
+    .card { max-height: 90dvh; overflow: auto; }
   `]
 })
 export class DayEntriesDialogComponent {
@@ -33,6 +35,7 @@ export class DayEntriesDialogComponent {
   @Input() entries: HistoryEntry[] = [];
   @Output() close = new EventEmitter<void>();
   @Output() deleteRequested = new EventEmitter<HistoryEntry[]>();
+  @Output() editRequested = new EventEmitter<HistoryEntry>();
 
   selected = new Set<string>();
   error = '';
@@ -53,6 +56,20 @@ export class DayEntriesDialogComponent {
       this.selected.add(id);
     }
     this.error = '';
+  }
+
+  get selectedCount(): number {
+    return this.selected.size;
+  }
+
+  askEdit(): void {
+    const chosen = this.entries.filter((entry) => this.isSelected(entry));
+    if (chosen.length !== 1) {
+      this.error = 'Selecione exatamente um registro para editar.';
+      return;
+    }
+    this.error = '';
+    this.editRequested.emit(chosen[0]);
   }
 
   askDelete(): void {

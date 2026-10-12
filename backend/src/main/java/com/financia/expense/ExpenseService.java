@@ -30,6 +30,11 @@ public class ExpenseService {
     private final RecurrenceEditService recurrenceEditService;
     private final RecurrenceRuleRepository recurrenceRuleRepository;
 
+    @Transactional(readOnly = true)
+    public ExpenseResponse get(Long userId, Long id) {
+        return ExpenseResponse.from(getOwned(userId, id));
+    }
+
     @Transactional
     public ExpenseResponse create(Long userId, ExpenseRequest request) {
         validate(request);

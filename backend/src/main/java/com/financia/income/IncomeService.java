@@ -26,6 +26,11 @@ public class IncomeService {
     private final RecurrenceEditService recurrenceEditService;
     private final RecurrenceRuleRepository recurrenceRuleRepository;
 
+    @Transactional(readOnly = true)
+    public IncomeResponse get(Long userId, Long id) {
+        return IncomeResponse.from(getOwned(userId, id));
+    }
+
     @Transactional
     public IncomeResponse create(Long userId, IncomeRequest request) {
         validate(request);

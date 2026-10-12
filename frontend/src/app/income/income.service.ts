@@ -6,6 +6,17 @@ import { environment } from '../../environments/environment';
 export class IncomeService {
   constructor(private http: HttpClient) {}
 
+  getIncome(id: number) {
+    return this.http.get<{
+      id: number;
+      date: string;
+      amount: number;
+      description?: string;
+      income_source_id?: number | null;
+      is_recurring?: boolean;
+    }>(`${environment.apiUrl}/income/${id}`);
+  }
+
   createIncome(payload: unknown) {
     return this.http.post(`${environment.apiUrl}/income`, payload);
   }

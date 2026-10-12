@@ -13,8 +13,11 @@
       </label>
       <label class="field">
         Email
-        <input formControlName="email" type="email" placeholder="voce@email.com">
+        <input formControlName="email" type="email" placeholder="voce@email.com" autocomplete="email">
       </label>
+      <p class="error" *ngIf="form.controls.email.invalid && (form.controls.email.dirty || attempted)">
+        Informe um e-mail no formato nome&#64;dominio.
+      </p>
       <label class="field">
         {{ mode === 'forgot' ? 'Senha nova' : 'Senha' }}
         <input formControlName="password" type="password" placeholder="Mínimo 6 caracteres">
@@ -25,7 +28,7 @@
       </label>
       <p class="error" *ngIf="error">{{ error }}</p>
       <p class="muted" *ngIf="info">{{ info }}</p>
-      <button class="btn" type="submit" [disabled]="form.invalid">
+      <button class="btn" type="submit" [disabled]="form.controls.email.invalid">
         {{ mode === 'login' ? 'Entrar' : mode === 'register' ? 'Criar conta' : 'Atualizar senha' }}
       </button>
     </form>

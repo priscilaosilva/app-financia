@@ -1,38 +1,35 @@
 # Financia
 
-Sistema de gestão financeira pessoal: Angular 17 + Spring Boot 3 + MySQL 8.
+Gestão financeira pessoal: saldo, histórico diário, entradas e saídas (inclusive recorrentes), relatórios e perfil. Interface em português.
 
-## Pré-requisitos
+Como subir API e frontend: [app-settings.md](./app-settings.md).  
+O que mudou em cada entrega: [RELEASE-NOTES.md](./RELEASE-NOTES.md).
 
-- Java 17+
-- Maven 3.9+
-- Node.js 20+
-- MySQL 8 em `localhost:3306` (database `financia`, user/senha padrão `root`/`root`)
+## Conta e sessão
 
-## Backend
+- Cadastro, login e troca de senha (e-mail da conta + senha nova duas vezes).
+- E-mail precisa estar no formato `nome@dominio`; Enter no formulário válido dispara a mesma ação do botão.
+- A sessão vale enquanto o token JWT for aceito. Trocar a senha invalida tokens antigos: é preciso entrar de novo.
 
-```bash
-cd backend
-netstat -ano | findstr :8080
-taskkill /PID 21544 /F
-cd /d/repos/Financia/app-financia/backend
-export DB_USER=root
-export DB_PASSWORD='<password>>'
-mvn spring-boot:run
-```
+## Histórico
 
-API em `http://localhost:8080/api`.
+- Planilha de **todos os dias do calendário** do mês, com entrada, saída e saldo corrido.
+- Recorrências futuras aparecem projetadas; cartão de crédito pode marcar saída como pendente.
+- **Nova entrada / Nova saída** no topo abrem um modal com data em branco. Os atalhos na linha pré-preenchem a data daquele dia. Escape ou Fechar cancela; clique no fundo não fecha.
+- **Gerenciar** na linha lista os lançamentos apagáveis daquele dia. Com **exatamente um** item marcado, aparece **Editar**.
+- Edição usa o mesmo tipo de modal: dá para alterar data, valor, descrição, fonte/categoria/pagamento e o tipo (entrada ↔ saída). Mesmo tipo atualiza; tipo diferente substitui (não ficam dois lançamentos). Lançamento recorrente pergunta se vale só esta ocorrência, esta e as futuras, ou toda a série. Depois de salvar, Gerenciar permanece aberto no mesmo dia (fecha só se não restar nada para gerenciar).
 
-## Frontend
+## Relatórios
 
-```bash
-cd frontend
-npm install
-npm start
-```
+- Filtro por mês, ano ou intervalo.
+- Totais, categorias e exportação CSV.
+- Gráfico de linhas: **saldo corrido**, **entradas do dia** e **saídas do dia** (não acumulado de entradas/saídas).
 
-App em `http://localhost:4200`. A rota inicial é o login.
+## Configurações e perfil
 
-## Validação
+- Fontes de receita, categorias, formas de pagamento (incluindo cartão com ciclo de fatura).
+- Tema claro/escuro no perfil.
 
-Os 8 cenários end-to-end estão em `specs/001-finance-management/quickstart.md`.
+## Telas estreitas
+
+Em largura de telemóvel (~393px e ~440px), a navegação vai para o topo, a tabela do histórico rola por dentro do card e os modais rolam internamente, sem exigir scroll horizontal da página.
