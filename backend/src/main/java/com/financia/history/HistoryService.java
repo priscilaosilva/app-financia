@@ -13,7 +13,10 @@ import com.financia.income.IncomeEntryRepository;
 import com.financia.paymentmethod.PaymentMethod;
 import com.financia.paymentmethod.PaymentMethodRepository;
 import com.financia.paymentmethod.PaymentMethodType;
+import com.financia.recurrence.ExceptionType;
 import com.financia.recurrence.ProjectedOccurrence;
+import com.financia.recurrence.RecurrenceException;
+import com.financia.recurrence.RecurrenceExceptionRepository;
 import com.financia.recurrence.RecurrenceProjectionService;
 import com.financia.recurrence.RecurrenceRule;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +41,7 @@ public class HistoryService {
     private final ExpenseEntryRepository expenseEntryRepository;
     private final PaymentMethodRepository paymentMethodRepository;
     private final RecurrenceProjectionService recurrenceProjectionService;
+    private final RecurrenceExceptionRepository recurrenceExceptionRepository;
 
     @Transactional(readOnly = true)
     public BalanceResponse balance(Long userId) {
@@ -67,11 +71,12 @@ public class HistoryService {
 
         BigDecimal running = openingBalance(userId, from.minusDays(1));
         List<HistoryRowDto> rows = new ArrayList<>();
-        for (Map.Entry<LocalDate, List<HistoryEntryDto>> entry : byDate.entrySet()) {
+        for (LocalDate day = from; !day.isAfter(to); day = day.plusDays(1)) {
+            List<HistoryEntryDto> items = byDate.getOrDefault(day, List.of());
             BigDecimal dailyIncome = BigDecimal.ZERO;
             BigDecimal dailyConfirmed = BigDecimal.ZERO;
             BigDecimal dailyPending = BigDecimal.ZERO;
-            for (HistoryEntryDto item : entry.getValue()) {
+            for (HistoryEntryDto item : items) {
                 if ("INCOME".equals(item.getType())) {
                     dailyIncome = dailyIncome.add(item.getAmount());
                     running = running.add(item.getAmount());
@@ -83,12 +88,13 @@ public class HistoryService {
                 }
             }
             rows.add(HistoryRowDto.builder()
-                    .date(entry.getKey())
-                    .entries(entry.getValue())
+                    .date(day)
+                    .entries(items)
                     .dailyIncome(dailyIncome)
                     .dailyExpenseConfirmed(dailyConfirmed)
                     .dailyExpensePending(dailyPending)
                     .runningBalance(running)
+                    .hasMovement(!items.isEmpty())
                     .build());
         }
         return new HistoryResponse(from, to, rows);
@@ -96,13 +102,20 @@ public class HistoryService {
 
     private void addPersistedIncomes(Long userId, LocalDate from, LocalDate to, Map<LocalDate, List<HistoryEntryDto>> byDate) {
         for (IncomeEntry entry : incomeEntryRepository.findByUserIdAndDateBetweenOrderByDateAsc(userId, from, to)) {
+            RecurrenceException override = occurrenceOverride(entry.getRecurrenceRule(), entry.getDate());
+            if (isCancelled(override)) {
+                continue;
+            }
+            BigDecimal amount = overrideAmount(override, entry.getAmount());
+            String description = overrideDescription(override, entry.getDescription());
             add(byDate, entry.getDate(), HistoryEntryDto.builder()
                     .id(entry.getId())
                     .type("INCOME")
-                    .amount(entry.getAmount())
-                    .label(label(entry.getDescription(), entry.getSourceNameSnapshot()))
+                    .amount(amount)
+                    .label(label(description, entry.getSourceNameSnapshot()))
                     .status("CONFIRMED")
                     .isRecurringProjection(false)
+                    .isRecurring(entry.getRecurrenceRule() != null)
                     .date(entry.getDate())
                     .build());
         }
@@ -110,15 +123,22 @@ public class HistoryService {
 
     private void addPersistedExpenses(Long userId, LocalDate from, LocalDate to, Map<LocalDate, List<HistoryEntryDto>> byDate) {
         for (ExpenseEntry entry : expenseEntryRepository.findByUserIdAndDateBetweenOrderByDateAsc(userId, from, to)) {
+            RecurrenceException override = occurrenceOverride(entry.getRecurrenceRule(), entry.getDate());
+            if (isCancelled(override)) {
+                continue;
+            }
+            BigDecimal amount = overrideAmount(override, entry.getAmount());
+            String description = overrideDescription(override, entry.getDescription());
             add(byDate, entry.getDate(), HistoryEntryDto.builder()
                     .id(entry.getId())
                     .type("EXPENSE")
-                    .amount(entry.getAmount())
-                    .label(label(entry.getDescription(), entry.getCategoryNameSnapshot()))
+                    .amount(amount)
+                    .label(label(description, entry.getCategoryNameSnapshot()))
                     .status(entry.getPaymentStatus().name())
                     .paymentMethod(entry.getPaymentMethodNameSnapshot())
                     .categoryNameSnapshot(entry.getCategoryNameSnapshot())
                     .isRecurringProjection(false)
+                    .isRecurring(entry.getRecurrenceRule() != null)
                     .date(entry.getDate())
                     .build());
         }
@@ -142,6 +162,7 @@ public class HistoryService {
                         .label(label(occurrence.getDescription(), base.getSourceNameSnapshot()))
                         .status("CONFIRMED")
                         .isRecurringProjection(true)
+                        .isRecurring(true)
                         .date(occurrence.getDate())
                         .build());
             }
@@ -168,6 +189,7 @@ public class HistoryService {
                         .paymentMethod(base.getPaymentMethodNameSnapshot())
                         .categoryNameSnapshot(base.getCategoryNameSnapshot())
                         .isRecurringProjection(true)
+                        .isRecurring(true)
                         .date(occurrence.getDate())
                         .build());
             }
@@ -190,6 +212,7 @@ public class HistoryService {
                         .status("CONFIRMED")
                         .paymentMethod(card.getName())
                         .isRecurringProjection(false)
+                        .isRecurring(false)
                         .date(due)
                         .build());
             }
@@ -258,6 +281,31 @@ public class HistoryService {
     private void add(Map<LocalDate, List<HistoryEntryDto>> byDate, LocalDate date, HistoryEntryDto dto) {
         byDate.computeIfAbsent(date, key -> new ArrayList<>()).add(dto);
         byDate.get(date).sort(Comparator.comparing(HistoryEntryDto::getType));
+    }
+
+    private RecurrenceException occurrenceOverride(RecurrenceRule rule, LocalDate date) {
+        if (rule == null || rule.getId() == null) {
+            return null;
+        }
+        return recurrenceExceptionRepository.findByRuleIdAndOriginalDate(rule.getId(), date).orElse(null);
+    }
+
+    private boolean isCancelled(RecurrenceException override) {
+        return override != null && override.getExceptionType() == ExceptionType.CANCELLED;
+    }
+
+    private BigDecimal overrideAmount(RecurrenceException override, BigDecimal fallback) {
+        if (override != null && override.getExceptionType() == ExceptionType.MODIFIED && override.getModifiedAmount() != null) {
+            return override.getModifiedAmount();
+        }
+        return fallback;
+    }
+
+    private String overrideDescription(RecurrenceException override, String fallback) {
+        if (override != null && override.getExceptionType() == ExceptionType.MODIFIED && override.getModifiedDescription() != null) {
+            return override.getModifiedDescription();
+        }
+        return fallback;
     }
 
     private String label(String description, String fallback) {

@@ -36,6 +36,9 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Column(name = "token_version", nullable = false)
+    private Integer tokenVersion = 1;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "theme_preference", nullable = false)
     private ThemePreference themePreference = ThemePreference.LIGHT;
@@ -53,6 +56,9 @@ public class User {
         updatedAt = now;
         if (themePreference == null) {
             themePreference = ThemePreference.LIGHT;
+        }
+        if (tokenVersion == null) {
+            tokenVersion = 1;
         }
     }
 

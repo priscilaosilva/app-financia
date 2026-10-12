@@ -6,6 +6,18 @@ import { environment } from '../../environments/environment';
 export class ExpenseService {
   constructor(private http: HttpClient) {}
 
+  getExpense(id: number) {
+    return this.http.get<{
+      id: number;
+      date: string;
+      amount: number;
+      description?: string;
+      expense_category_id?: number | null;
+      payment_method_id?: number | null;
+      is_recurring?: boolean;
+    }>(`${environment.apiUrl}/expense/${id}`);
+  }
+
   createExpense(payload: unknown) {
     return this.http.post(`${environment.apiUrl}/expense`, payload);
   }

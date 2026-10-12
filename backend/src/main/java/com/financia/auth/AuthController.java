@@ -1,5 +1,6 @@
 package com.financia.auth;
 
+import com.financia.auth.dto.ForgotPasswordRequest;
 import com.financia.auth.dto.LoginRequest;
 import com.financia.auth.dto.LoginResponse;
 import com.financia.auth.dto.RegisterRequest;
@@ -29,5 +30,11 @@ public class AuthController {
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request.getEmail(), request.getPassword());
+    }
+
+    @PostMapping("/forgot-password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.getEmail(), request.getNewPassword(), request.getNewPasswordConfirmation());
     }
 }

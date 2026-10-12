@@ -30,6 +30,11 @@ public class ExpenseService {
     private final RecurrenceEditService recurrenceEditService;
     private final RecurrenceRuleRepository recurrenceRuleRepository;
 
+    @Transactional(readOnly = true)
+    public ExpenseResponse get(Long userId, Long id) {
+        return ExpenseResponse.from(getOwned(userId, id));
+    }
+
     @Transactional
     public ExpenseResponse create(Long userId, ExpenseRequest request) {
         validate(request);
@@ -78,10 +83,6 @@ public class ExpenseService {
                     }
             );
             if (scope == RecurrenceScope.THIS_ONLY) {
-                if (occurrenceDate.equals(entry.getDate())) {
-                    applyFields(userId, entry, request);
-                    return ExpenseResponse.from(expenseEntryRepository.save(entry));
-                }
                 return ExpenseResponse.from(entry);
             }
         } else {
@@ -92,15 +93,24 @@ public class ExpenseService {
 
     @Transactional
     public void delete(Long userId, Long id, RecurrenceScope scope) {
+        delete(userId, id, scope, null);
+    }
+
+    @Transactional
+    public void delete(Long userId, Long id, RecurrenceScope scope, LocalDate occurrenceDate) {
         ExpenseEntry entry = getOwned(userId, id);
+        LocalDate occ = occurrenceDate != null ? occurrenceDate : entry.getDate();
         if (entry.getRecurrenceRule() != null) {
             RecurrenceRule rule = entry.getRecurrenceRule();
-            recurrenceEditService.handleDelete(rule, entry.getDate(), scope, () -> {
+            recurrenceEditService.handleDelete(rule, occ, scope, () -> {
                 expenseEntryRepository.findByUserIdAndRecurrenceRuleIdAndBaseRecurrenceTrue(userId, rule.getId())
                         .ifPresent(expenseEntryRepository::delete);
                 recurrenceRuleRepository.delete(rule);
             });
             return;
+        }
+        if (occurrenceDate != null && !occurrenceDate.equals(entry.getDate())) {
+            throw new BusinessException("Lançamento não ocorre nesta data", "date");
         }
         expenseEntryRepository.delete(entry);
     }

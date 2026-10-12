@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -22,6 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class IncomeController {
 
     private final IncomeService incomeService;
+
+    @GetMapping("/{id}")
+    public IncomeResponse get(@PathVariable Long id) {
+        return incomeService.get(SecurityUtils.currentUserId(), id);
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

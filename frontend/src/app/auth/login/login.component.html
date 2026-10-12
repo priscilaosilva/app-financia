@@ -1,7 +1,11 @@
 <section class="page" style="max-width: 460px; margin: 8vh auto;">
   <div class="card">
     <h1>Financia</h1>
-    <p class="muted">{{ mode === 'login' ? 'Entre para ver seu saldo e histórico.' : 'Crie sua conta para começar.' }}</p>
+    <p class="muted">
+      {{ mode === 'login' ? 'Entre para ver seu saldo e histórico.'
+        : mode === 'register' ? 'Crie sua conta para começar.'
+        : 'Informe o e-mail da conta e a senha nova duas vezes.' }}
+    </p>
     <form [formGroup]="form" (ngSubmit)="submit()">
       <label class="field" *ngIf="mode === 'register'">
         Nome
@@ -9,19 +13,30 @@
       </label>
       <label class="field">
         Email
-        <input formControlName="email" type="email" placeholder="voce@email.com">
+        <input formControlName="email" type="email" placeholder="voce@email.com" autocomplete="email">
       </label>
+      <p class="error" *ngIf="form.controls.email.invalid && (form.controls.email.dirty || attempted)">
+        Informe um e-mail no formato nome&#64;dominio.
+      </p>
       <label class="field">
-        Senha
+        {{ mode === 'forgot' ? 'Senha nova' : 'Senha' }}
         <input formControlName="password" type="password" placeholder="Mínimo 6 caracteres">
       </label>
+      <label class="field" *ngIf="mode === 'forgot'">
+        Confirmar senha nova
+        <input formControlName="passwordConfirmation" type="password" placeholder="Repita a senha nova">
+      </label>
       <p class="error" *ngIf="error">{{ error }}</p>
-      <button class="btn" type="submit" [disabled]="form.invalid">
-        {{ mode === 'login' ? 'Entrar' : 'Criar conta' }}
+      <p class="muted" *ngIf="info">{{ info }}</p>
+      <button class="btn" type="submit" [disabled]="form.controls.email.invalid">
+        {{ mode === 'login' ? 'Entrar' : mode === 'register' ? 'Criar conta' : 'Atualizar senha' }}
       </button>
     </form>
-    <p style="margin-top: 1rem;">
-      <button class="btn ghost" type="button" (click)="mode = mode === 'login' ? 'register' : 'login'">
+    <p style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-start;">
+      <button class="btn ghost" type="button" *ngIf="mode === 'login'" (click)="setMode('forgot')">
+        Trocar senha
+      </button>
+      <button class="btn ghost" type="button" (click)="setMode(mode === 'login' ? 'register' : 'login')">
         {{ mode === 'login' ? 'Ainda não tenho conta' : 'Já tenho conta' }}
       </button>
     </p>

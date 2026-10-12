@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Chart } from 'chart.js/auto';
+import { switchMap } from 'rxjs/operators';
+import { HistoryResponse, HistoryService } from '../history/history.service';
 import { ReportResponse, ReportsService } from './reports.service';
 
 @Component({
@@ -20,7 +22,7 @@ export class ReportsComponent implements AfterViewInit {
   report?: ReportResponse;
   private chart?: Chart;
 
-  constructor(private reports: ReportsService) {}
+  constructor(private reports: ReportsService, private historyApi: HistoryService) {}
 
   ngAfterViewInit(): void {
     this.generate();
@@ -37,9 +39,14 @@ export class ReportsComponent implements AfterViewInit {
   }
 
   generate(): void {
-    this.reports.getReport(this.params()).subscribe((report) => {
-      this.report = report;
-      this.renderChart();
+    this.reports.getReport(this.params()).pipe(
+      switchMap((report) => {
+        this.report = report;
+        return this.historyApi.getHistory(report.period.from, report.period.to);
+      })
+    ).subscribe({
+      next: (history) => setTimeout(() => this.renderChart(history)),
+      error: () => setTimeout(() => this.renderChart())
     });
   }
 
@@ -47,19 +54,32 @@ export class ReportsComponent implements AfterViewInit {
     this.reports.exportCsv(this.params());
   }
 
-  private renderChart(): void {
-    if (!this.chartRef || !this.report) {
+  private renderChart(history?: HistoryResponse): void {
+    if (!this.chartRef) {
       return;
     }
+    const rows = history?.rows ?? [];
     this.chart?.destroy();
     this.chart = new Chart(this.chartRef.nativeElement, {
       type: 'line',
       data: {
-        labels: this.report.projections.savings.map((p) => p.date),
+        labels: rows.map((row) => row.date),
         datasets: [
-          { label: 'Entradas', data: this.report.projections.income.map((p) => p.cumulative), borderColor: '#1f6b4a' },
-          { label: 'Saídas', data: this.report.projections.expenses.map((p) => p.cumulative), borderColor: '#9b3d3d' },
-          { label: 'Economia', data: this.report.projections.savings.map((p) => p.cumulative), borderColor: '#c9842a' }
+          {
+            label: 'Saldo',
+            data: rows.map((row) => row.running_balance),
+            borderColor: '#c9842a'
+          },
+          {
+            label: 'Entradas do dia',
+            data: rows.map((row) => row.daily_income),
+            borderColor: '#1f6b4a'
+          },
+          {
+            label: 'Saídas do dia',
+            data: rows.map((row) => row.daily_expense_confirmed + row.daily_expense_pending),
+            borderColor: '#9b3d3d'
+          }
         ]
       }
     });

@@ -18,7 +18,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
     </div>
   `,
   styles: [`
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); padding: 1rem; z-index: 20; }
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); padding: 1rem; z-index: 40; overflow: auto; }
     button { display: block; width: 100%; margin-bottom: 0.6rem; }
   `]
 })

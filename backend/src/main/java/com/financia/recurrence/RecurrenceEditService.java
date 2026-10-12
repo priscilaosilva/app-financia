@@ -58,6 +58,7 @@ public class RecurrenceEditService {
             case THIS_AND_FUTURE -> {
                 currentRule.setEndDate(originalDate.minusDays(1));
                 ruleRepository.save(currentRule);
+                upsertException(currentRule, originalDate, ExceptionType.CANCELLED, null, null);
             }
             case ALL -> deleteAll.run();
         }

@@ -11,6 +11,7 @@ export interface HistoryEntry {
   status: string;
   payment_method?: string;
   is_recurring_projection: boolean;
+  is_recurring?: boolean;
 }
 
 export interface HistoryRow {
@@ -20,6 +21,7 @@ export interface HistoryRow {
   daily_expense_confirmed: number;
   daily_expense_pending: number;
   running_balance: number;
+  has_movement?: boolean;
 }
 
 export interface HistoryResponse {
@@ -38,5 +40,13 @@ export class HistoryService {
 
   getBalance() {
     return this.http.get<{ balance: number; calculated_at: string }>(`${environment.apiUrl}/balance`);
+  }
+
+  deleteDayEntries(date: string, items: Array<{ id: number; type: string }>, recurrenceScope?: string) {
+    return this.http.post(`${environment.apiUrl}/history/day-deletions`, {
+      date,
+      items,
+      recurrence_scope: recurrenceScope
+    });
   }
 }

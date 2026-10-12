@@ -26,10 +26,15 @@ public class JwtTokenProvider {
     }
 
     public String generateToken(String email, Long userId) {
+        return generateToken(email, userId, 1);
+    }
+
+    public String generateToken(String email, Long userId, int tokenVersion) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(email)
                 .claim("userId", userId)
+                .claim("token_version", tokenVersion)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusMillis(expirationMs)))
                 .signWith(key)
@@ -51,6 +56,14 @@ public class JwtTokenProvider {
 
     public Long getUserIdFromToken(String token) {
         return parse(token).get("userId", Long.class);
+    }
+
+    public int getTokenVersionFromToken(String token) {
+        Object value = parse(token).get("token_version");
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        return 1;
     }
 
     public Instant getExpiration(String token) {
